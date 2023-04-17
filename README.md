@@ -9,3 +9,5 @@ Microsservices Java para manipulação de PDF's
 
 - [x]  Usar raspberry para o desenvolvimento
 - [ ]  Interface em VueJs
+
+![topologia](./img/topologia.excalidraw.png)
