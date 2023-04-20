@@ -46,33 +46,27 @@ public class MergeServiceFacade {
 	 * @param file2
 	 * @return Boolean - Indica se o processamento ocorreu com sucesso.
 	 */
-	public Boolean mergeFiles(InputStream file1, InputStream file2) {
+	public Boolean mergeFiles(List<InputStream> files) {
 		
 		//TODO Melhorar o código como um todo.
         String title = "Merged document";
         String creator = "David Rusycki";
         String subject = "Metamorphic.pdf";
-
-        List<InputStream> filesList = new ArrayList<InputStream>();
-        filesList.add(file1);
-        filesList.add(file2);
         
         try (COSStream cosStream = new COSStream();ByteArrayOutputStream mergedPDFOutputStream = new ByteArrayOutputStream())
         {
-            PDFMergerUtility pdfMerger = createPDFMergerUtility(filesList, mergedPDFOutputStream);
-            PDDocumentInformation pdfDocumentInfo = createPDFDocumentInfo(title, creator, subject);
-            PDMetadata xmpMetadata = createXMPMetadata(cosStream, title, creator, subject);            
+            PDFMergerUtility pdfMerger = createPDFMergerUtility(files, mergedPDFOutputStream);
+            PDDocumentInformation pdfDocumentInfo = createPDFDocumentInfo(title, creator, subject);            
             
             pdfMerger.setDestinationDocumentInformation(pdfDocumentInfo);
-            pdfMerger.setDestinationMetadata(xmpMetadata);
         
-            LOG.info("Juntando " + filesList.size() + " arquivos em 1 PDF");
+            LOG.info("Juntando " + files.size() + " arquivos em 1 PDF");
             pdfMerger.mergeDocuments(MemoryUsageSetting.setupMixed(1000000));
             LOG.info("PDF merged com sucesso, tamanho = {" + mergedPDFOutputStream.size() + "} bytes");
         
             this.setFileResult(mergedPDFOutputStream);
         }
-        catch (BadFieldValueException | TransformerException | IOException e)
+        catch (IOException e)
         {
         	LOG.info("PDF merge problem");
         	LOG.info(e.getMessage());
@@ -81,7 +75,7 @@ public class MergeServiceFacade {
         }
         finally
         {
-        	filesList.forEach(IOUtils::closeQuietly);
+        	files.forEach(IOUtils::closeQuietly);
         }
 		
 		return true;
@@ -119,49 +113,4 @@ public class MergeServiceFacade {
         return documentInformation;
     }
 
-    /**
-     * 
-     * @param cosStream
-     * @param title
-     * @param creator
-     * @param subject
-     * @return
-     * @throws BadFieldValueException
-     * @throws TransformerException
-     * @throws IOException
-     */
-    private PDMetadata createXMPMetadata(COSStream cosStream, String title, String creator, String subject) throws BadFieldValueException, TransformerException, IOException
-    {
-        LOG.info("Setando o XMP metadata (title, author, subject) para o PDF merged.");
-        XMPMetadata xmpMetadata = XMPMetadata.createXMPMetadata();
-
-        // PDF/A-1b properties
-        PDFAIdentificationSchema pdfaSchema = xmpMetadata.createAndAddPFAIdentificationSchema();
-        pdfaSchema.setPart(1);
-        pdfaSchema.setConformance("B");
-
-        // Dublin Core properties
-        DublinCoreSchema dublinCoreSchema = xmpMetadata.createAndAddDublinCoreSchema();
-        dublinCoreSchema.setTitle(title);
-        dublinCoreSchema.addCreator(creator);
-        dublinCoreSchema.setDescription(subject);
-
-        // XMP Basic properties
-        XMPBasicSchema basicSchema = xmpMetadata.createAndAddXMPBasicSchema();
-        Calendar creationDate = Calendar.getInstance();
-        basicSchema.setCreateDate(creationDate);
-        basicSchema.setModifyDate(creationDate);
-        basicSchema.setMetadataDate(creationDate);
-        basicSchema.setCreatorTool(creator);
-
-        // Create and return XMP data structure in XML format
-        try (ByteArrayOutputStream xmpOutputStream = new ByteArrayOutputStream();
-                OutputStream cosXMPStream = cosStream.createOutputStream())
-        {
-            new XmpSerializer().serialize(xmpMetadata, xmpOutputStream, true);
-            cosXMPStream.write(xmpOutputStream.toByteArray());
-            return new PDMetadata(cosStream);
-        }
-    }
-	
 }

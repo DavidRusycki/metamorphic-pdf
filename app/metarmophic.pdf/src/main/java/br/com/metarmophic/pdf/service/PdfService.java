@@ -6,12 +6,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,31 +43,45 @@ public class PdfService {
 	@RequestMapping("/merge")
 	public ResponseEntity<byte[]> merge(@RequestParam("files") MultipartFile[] files) {
 		//TODO validar se o tipo é pdf.
-		List<MultipartFile> list = Arrays.asList(files).stream().collect(Collectors.toList());
 		
+		
+		//TODO tentar facilitar o merge utilizando apenas o Utility
 		try {
-			this.getMergeService().mergeFiles(list.get(0).getInputStream(), list.get(1).getInputStream());
-		
-			File fileSaida = File.createTempFile("merge", null);
-			
-			FileOutputStream mesmo = new FileOutputStream(fileSaida);
-			InputStream saida = new FileInputStream(fileSaida);
-
+			List<InputStream> list = this.getListInputStreamFiles(files);
+			this.getMergeService().mergeFiles(list);
 			ByteArrayOutputStream bfile = this.getMergeService().getFileResult();
 			
-			mesmo.write(bfile.toByteArray());
-			mesmo.flush();
-			mesmo.close();
-			fileSaida.deleteOnExit();
+			String resultFileName = UUID.randomUUID().toString();
 			
 			return ResponseEntity.ok()
 	                .contentType(MediaType.APPLICATION_PDF)
-	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + "merged.pdf" + "\"")
-	                .body(saida.readAllBytes());
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resultFileName +".pdf" + "\"")
+	                .body(bfile.toByteArray());
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			return ResponseEntity.internalServerError().build();
 		}
+	}
+
+	/**
+	 * Monta a lista de InputStream de arquivos.
+	 * @param files
+	 * @return List<InputStream>
+	 * @throws IOException
+	 */
+	private List<InputStream> getListInputStreamFiles(MultipartFile[] files) throws IOException {
+		List<InputStream> list = new ArrayList<InputStream>();
+		
+		for (MultipartFile multipartFile : files) {
+			list.add(multipartFile.getInputStream());
+		}
+		
+		if (list.size() <= 0) {
+			throw new IOException("Não foi possível recuperar a lista de arquivos.");
+		}
+		
+		return list;
 	}
 	
 	
