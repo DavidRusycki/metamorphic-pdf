@@ -3,42 +3,41 @@ package br.com.metarmophic.pdf.merge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
-import javax.xml.transform.TransformerException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.schema.DublinCoreSchema;
-import org.apache.xmpbox.schema.PDFAIdentificationSchema;
-import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.xml.XmpSerializer;
 
+import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
+import br.com.metarmophic.pdf.log.Logger;
 import lombok.Data;
 
 @Data
 public class MergeServiceFacade {
 
 	/**
-	 * Logger do serviço de merge
-	 */
-	private static final Log LOG = LogFactory.getLog(MergeServiceFacade.class);
-	
-	/**
 	 * Arquivo de resultado do merge.
 	 */
 	private ByteArrayOutputStream fileResult = null;
+	
+	/**
+	 * Realiza o processamento para junção
+	 * @param fileList
+	 * @param properties
+	 * @return ByteArrayOutputStream
+	 */
+	public ByteArrayOutputStream merge(List<InputStream> fileList, PdfPropertiesDTO properties) {
+		Boolean sucesso = this.mergeFiles(fileList, properties);
+		
+		ByteArrayOutputStream bfile = null;
+		if (sucesso) {
+			bfile = this.getFileResult();
+		}
+		
+		return bfile;
+	}	
 	
 	/**
 	 * Método principal para realizar o merge de dois documentos.
@@ -46,31 +45,33 @@ public class MergeServiceFacade {
 	 * @param file2
 	 * @return Boolean - Indica se o processamento ocorreu com sucesso.
 	 */
-	public Boolean mergeFiles(List<InputStream> files) {
+	private Boolean mergeFiles(List<InputStream> files, PdfPropertiesDTO properties) {
 		
+		//TODO tentar facilitar o merge utilizando apenas o Utility
+
 		//TODO Melhorar o código como um todo.
-        String title = "Merged document";
-        String creator = "David Rusycki";
-        String subject = "Metamorphic.pdf";
-        
-        try (COSStream cosStream = new COSStream();ByteArrayOutputStream mergedPDFOutputStream = new ByteArrayOutputStream())
+		//TODO Implementar um esquema de logs das operações executadas.
+		Logger.getLog().debug("Instanciando recursos para juncao.");
+		
+        try (ByteArrayOutputStream mergedPDFOutputStream = new ByteArrayOutputStream())
         {
-            PDFMergerUtility pdfMerger = createPDFMergerUtility(files, mergedPDFOutputStream);
-            PDDocumentInformation pdfDocumentInfo = createPDFDocumentInfo(title, creator, subject);            
-            
+            PDFMergerUtility pdfMerger = this.createPDFMergerUtility(files, mergedPDFOutputStream);
+            PDDocumentInformation pdfDocumentInfo = this.createPDFDocumentInfo(properties);            
             pdfMerger.setDestinationDocumentInformation(pdfDocumentInfo);
         
-            LOG.info("Juntando " + files.size() + " arquivos em 1 PDF");
+            Logger.getLog().debug("Juntando " + files.size() + " arquivos");
             pdfMerger.mergeDocuments(MemoryUsageSetting.setupMixed(1000000));
-            LOG.info("PDF merged com sucesso, tamanho = {" + mergedPDFOutputStream.size() + "} bytes");
         
             this.setFileResult(mergedPDFOutputStream);
         }
         catch (IOException e)
         {
-        	LOG.info("PDF merge problem");
-        	LOG.info(e.getMessage());
-        	e.printStackTrace();
+        	this.setFileResult(null);
+        	Logger.getLog().debug("Problema ao realizar o merge");
+        	Logger.getLog().debug(e.getMessage());
+        	if (Logger.getLog().isDebugEnabled()) {
+        		e.printStackTrace();        		
+        	}
         	return false;
         }
         finally
@@ -87,30 +88,34 @@ public class MergeServiceFacade {
      * @param mergedPDFOutputStream
      * @return PDFMergerUtility
      */
-    private PDFMergerUtility createPDFMergerUtility(List<InputStream> filesList, ByteArrayOutputStream mergedPDFOutputStream)
-    {
-        LOG.info("Iniciando o Utilitário de Merge");
+    private PDFMergerUtility createPDFMergerUtility(List<InputStream> filesList, ByteArrayOutputStream mergedPDFOutputStream) {
+    	Logger.getLog().debug("Instanciando informacoes do documento.");
         PDFMergerUtility pdfMerger = new PDFMergerUtility();
         pdfMerger.addSources(filesList);
         pdfMerger.setDestinationStream(mergedPDFOutputStream);
+        
         return pdfMerger;
     }
 
     /**
      * Cria o objeto de informações do pdf
-     * @param title
-     * @param creator
-     * @param subject
+     * @param properties - Objeto de Propriedades
      * @return PDDocumentInformation
      */
-    private PDDocumentInformation createPDFDocumentInfo(String title, String creator, String subject)
-    {
-        LOG.info("Setando as informações do documento. (title, author, subject) para o PDF Merge.");
+    private PDDocumentInformation createPDFDocumentInfo(PdfPropertiesDTO properties) {
+    	Logger.getLog().debug("Definindo as propriedades do documento.");
         PDDocumentInformation documentInformation = new PDDocumentInformation();
-        documentInformation.setTitle(title);
-        documentInformation.setCreator(creator);
-        documentInformation.setSubject(subject);
+        documentInformation.setTitle(properties.getTitle());
+        documentInformation.setCreator(properties.getCreator());
+        documentInformation.setSubject(properties.getSubject());
+        documentInformation.setAuthor(properties.getAuthor());
+        documentInformation.setProducer(properties.getProducer());
+        documentInformation.setCreationDate(properties.getCreationDate());
+        documentInformation.setModificationDate(properties.getModificationDate());
+        
         return documentInformation;
     }
 
 }
+
+
