@@ -41,6 +41,7 @@ public class ControllerMerge {
 	                .body(bytes);
 			
 		} catch (Exception e) {
+			Logger.getLog().info("Falha ao realizar o merge.");
 			if (Logger.getLog().isDebugEnabled()) {
 				e.printStackTrace();				
 			}

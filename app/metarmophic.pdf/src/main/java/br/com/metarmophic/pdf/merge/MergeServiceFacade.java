@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
+import br.com.metarmophic.pdf.exception.FailMergeProcessException;
 import br.com.metarmophic.pdf.log.Logger;
 import lombok.Data;
 
@@ -46,10 +47,6 @@ public class MergeServiceFacade {
 	 * @return Boolean - Indica se o processamento ocorreu com sucesso.
 	 */
 	private Boolean mergeFiles(List<InputStream> files, PdfPropertiesDTO properties) {
-		
-		//TODO tentar facilitar o merge utilizando apenas o Utility
-
-		//TODO Melhorar o código como um todo.
 		//TODO Implementar um esquema de logs das operações executadas.
 		Logger.getLog().debug("Instanciando recursos para juncao.");
 		
@@ -64,7 +61,7 @@ public class MergeServiceFacade {
         
             this.setFileResult(mergedPDFOutputStream);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
         	this.setFileResult(null);
         	Logger.getLog().debug("Problema ao realizar o merge");
