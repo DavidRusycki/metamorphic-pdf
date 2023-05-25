@@ -29,24 +29,30 @@ public class ControllerMerge {
 	
 	@PostMapping
 	public ResponseEntity<byte[]> merge(@RequestParam("files") MultipartFile[] files, @RequestParam("config") String json) {
+		
+		ResponseEntity<byte[]> response = null;
+		
 		try {
 			PdfPropertiesDTO properties = new ObjectMapper().readValue(json, PdfPropertiesDTO.class);
-			
 			Logger.getLog().debug("Iniciando servico de merge.");
 			byte[] bytes = this.getMergeService().merge(files, properties);
 			
-			return ResponseEntity.ok()
-	                .contentType(MediaType.APPLICATION_PDF)
-	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + this.getNameResultFile() + "\"")
-	                .body(bytes);
+			response = ResponseEntity.ok()
+		                .contentType(MediaType.APPLICATION_PDF)
+		                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + this.getNameResultFile() + "\"")
+		                .body(bytes);
 			
 		} catch (Exception e) {
 			Logger.getLog().info("Falha ao realizar o merge.");
+			
 			if (Logger.getLog().isDebugEnabled()) {
 				e.printStackTrace();				
 			}
-			return ResponseEntity.internalServerError().build();
+			
+			response = ResponseEntity.internalServerError().build();
 		}
+		
+		return response;
 	}
 	
 	/**

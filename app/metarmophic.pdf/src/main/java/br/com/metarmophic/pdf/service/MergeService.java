@@ -81,7 +81,7 @@ public class MergeService {
 
 		for (MultipartFile multipartFile : files) {
 			if (!multipartFile.getContentType().toString().equals(MediaType.APPLICATION_PDF.toString())) {
-				throw new FileContentTypeNotSupportedException("Content type not supported :/");
+				throw new FileContentTypeNotSupportedException("File content type not supported :/");
 			}
 		}
 		
