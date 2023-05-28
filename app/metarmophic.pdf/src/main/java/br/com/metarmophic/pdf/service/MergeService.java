@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,13 +18,18 @@ import br.com.metarmophic.pdf.exception.FailMergeProcessException;
 import br.com.metarmophic.pdf.exception.FileContentTypeNotSupportedException;
 import br.com.metarmophic.pdf.log.Logger;
 import br.com.metarmophic.pdf.merge.MergeServiceFacade;
+import br.com.metarmophic.pdf.merge.MergeServiceValidation;
 import lombok.Data;
 
 @Data
 @Service
 public class MergeService {
 	
-	private MergeServiceFacade mergeServiceFacade = new MergeServiceFacade();
+	@Autowired
+	private MergeServiceFacade mergeServiceFacade;
+	
+	@Autowired
+	private MergeServiceValidation mergeServiceValidation;
 	
 	/**
 	 * Realiza validações e tratamentos para chamar a classe Merge.
@@ -35,10 +41,10 @@ public class MergeService {
 	 * @throws FileContentTypeNotSupportedException 
 	 */
 	public byte[] merge(@RequestParam("files") MultipartFile[] files, PdfPropertiesDTO properties) throws FailMergeProcessException, FileContentTypeNotSupportedException, IOException {
-		this.prepareData(files, properties);
+		mergeServiceValidation.validate(files);
+		mergeServiceValidation.prepareData(properties);
 		
 		List<InputStream> list = this.getListInputStreamFiles(files);
-		
 		Logger.getLog().debug("Iniciando processo de merge.");
 		ByteArrayOutputStream bfile = this.getMergeServiceFacade().merge(list, properties);
 		
@@ -51,43 +57,6 @@ public class MergeService {
 		Logger.getLog().info("Juncao realizada com sucesso!");
 		
 		return bfile.toByteArray();
-	}
-
-	/**
-	 * Prepara e valida os dados.
-	 * @return Boolean
-	 * @throws FileContentTypeNotSupportedException 
-	 */
-	private Boolean prepareData(MultipartFile[] files, PdfPropertiesDTO properties) throws FileContentTypeNotSupportedException {
-		/* Valida o formato dos arquivos recebidos*/
-		this.validatePdfFormat(files);
-		
-		/* Define as informações para o pdf */
-		MetamorphicPdfPropertiesEntity propertiesEntity = new MetamorphicPdfPropertiesEntity(properties);
-		propertiesEntity.setDatesForMerge();
-		propertiesEntity.loadDefaultPropertiesOnNullables();
-		
-		return true;
-	}
-	
-	/**
-	 * Valida o formato dos arquivos recebidos
-	 * @param files
-	 * @return Boolean
-	 * @throws FileContentTypeNotSupportedException 
-	 */
-	private Boolean validatePdfFormat(MultipartFile[] files) throws FileContentTypeNotSupportedException {
-		Logger.getLog().debug("Validando arquivos.");
-
-		for (MultipartFile multipartFile : files) {
-			if (!multipartFile.getContentType().toString().equals(MediaType.APPLICATION_PDF.toString())) {
-				throw new FileContentTypeNotSupportedException("File content type not supported :/");
-			}
-		}
-		
-		Logger.getLog().debug("Arquivos validados com sucesso!");
-		
-		return true;
 	}
 	
 	/**
