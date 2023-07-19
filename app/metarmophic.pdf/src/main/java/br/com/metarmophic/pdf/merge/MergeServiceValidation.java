@@ -1,6 +1,7 @@
 package br.com.metarmophic.pdf.merge;
 
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
@@ -8,6 +9,7 @@ import br.com.metarmophic.pdf.entitie.MetamorphicPdfPropertiesEntity;
 import br.com.metarmophic.pdf.exception.FileContentTypeNotSupportedException;
 import br.com.metarmophic.pdf.log.Logger;
 
+@Service
 public class MergeServiceValidation {
 
 	/**

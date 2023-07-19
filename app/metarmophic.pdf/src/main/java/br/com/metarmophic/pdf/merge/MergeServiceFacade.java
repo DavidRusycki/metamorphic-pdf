@@ -1,7 +1,6 @@
 package br.com.metarmophic.pdf.merge;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -9,13 +8,14 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.stereotype.Service;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
-import br.com.metarmophic.pdf.exception.FailMergeProcessException;
 import br.com.metarmophic.pdf.log.Logger;
 import lombok.Data;
 
 @Data
+@Service
 public class MergeServiceFacade {
 
 	/**
