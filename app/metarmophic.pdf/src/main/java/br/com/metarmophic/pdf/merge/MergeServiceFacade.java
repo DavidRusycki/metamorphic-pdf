@@ -8,16 +8,19 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
-import br.com.metarmophic.pdf.log.Logger;
 import lombok.Data;
 
 @Data
 @Service
 public class MergeServiceFacade {
 
+	private Logger log = LoggerFactory.getLogger(MergeServiceFacade.class);
+	
 	/**
 	 * Arquivo de resultado do merge.
 	 */
@@ -48,7 +51,7 @@ public class MergeServiceFacade {
 	 */
 	private Boolean mergeFiles(List<InputStream> files, PdfPropertiesDTO properties) {
 		//TODO Implementar um esquema de logs das operações executadas.
-		Logger.getLog().debug("Instanciando recursos para juncao.");
+		log.debug("Instanciando recursos para juncao.");
 		
         try (ByteArrayOutputStream mergedPDFOutputStream = new ByteArrayOutputStream())
         {
@@ -56,7 +59,7 @@ public class MergeServiceFacade {
             PDDocumentInformation pdfDocumentInfo = this.createPDFDocumentInfo(properties);            
             pdfMerger.setDestinationDocumentInformation(pdfDocumentInfo);
         
-            Logger.getLog().debug("Juntando " + files.size() + " arquivos");
+            log.debug("Juntando " + files.size() + " arquivos");
             pdfMerger.mergeDocuments(MemoryUsageSetting.setupMixed(1000000));
         
             this.setFileResult(mergedPDFOutputStream);
@@ -64,9 +67,9 @@ public class MergeServiceFacade {
         catch (Exception e)
         {
         	this.setFileResult(null);
-        	Logger.getLog().debug("Problema ao realizar o merge");
-        	Logger.getLog().debug(e.getMessage());
-        	if (Logger.getLog().isDebugEnabled()) {
+        	log.debug("Problema ao realizar o merge");
+        	log.debug(e.getMessage());
+        	if (log.isDebugEnabled()) {
         		e.printStackTrace();        		
         	}
         	return false;
@@ -86,7 +89,7 @@ public class MergeServiceFacade {
      * @return PDFMergerUtility
      */
     private PDFMergerUtility createPDFMergerUtility(List<InputStream> filesList, ByteArrayOutputStream mergedPDFOutputStream) {
-    	Logger.getLog().debug("Instanciando informacoes do documento.");
+    	log.debug("Instanciando informacoes do documento.");
         PDFMergerUtility pdfMerger = new PDFMergerUtility();
         pdfMerger.addSources(filesList);
         pdfMerger.setDestinationStream(mergedPDFOutputStream);
@@ -100,7 +103,7 @@ public class MergeServiceFacade {
      * @return PDDocumentInformation
      */
     private PDDocumentInformation createPDFDocumentInfo(PdfPropertiesDTO properties) {
-    	Logger.getLog().debug("Definindo as propriedades do documento.");
+    	log.debug("Definindo as propriedades do documento.");
         PDDocumentInformation documentInformation = new PDDocumentInformation();
         documentInformation.setTitle(properties.getTitle());
         documentInformation.setCreator(properties.getCreator());

@@ -6,17 +6,16 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
-import br.com.metarmophic.pdf.entitie.MetamorphicPdfPropertiesEntity;
 import br.com.metarmophic.pdf.exception.FailMergeProcessException;
 import br.com.metarmophic.pdf.exception.FileContentTypeNotSupportedException;
-import br.com.metarmophic.pdf.log.Logger;
 import br.com.metarmophic.pdf.merge.MergeServiceFacade;
 import br.com.metarmophic.pdf.merge.MergeServiceValidation;
 import lombok.Data;
@@ -24,6 +23,8 @@ import lombok.Data;
 @Data
 @Service
 public class MergeService {
+	
+	private Logger log = LoggerFactory.getLogger(MergeService.class);
 	
 	@Autowired
 	private MergeServiceFacade mergeServiceFacade;
@@ -45,16 +46,16 @@ public class MergeService {
 		mergeServiceValidation.prepareData(properties);
 		
 		List<InputStream> list = this.getListInputStreamFiles(files);
-		Logger.getLog().debug("Iniciando processo de merge.");
+		log.debug("Iniciando processo de merge.");
 		ByteArrayOutputStream bfile = this.getMergeServiceFacade().merge(list, properties);
 		
 		if (bfile == null) {
 			String falha = "Falha ao realizar o merge.";
-			Logger.getLog().info(falha);
+			log.info(falha);
 			throw new FailMergeProcessException(falha);
 		}
 		
-		Logger.getLog().info("Juncao realizada com sucesso!");
+		log.info("Juncao realizada com sucesso!");
 		
 		return bfile.toByteArray();
 	}

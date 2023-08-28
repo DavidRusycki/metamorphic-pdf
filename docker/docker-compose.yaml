@@ -1,9 +1,16 @@
-version: '3.8'
+version: '3.9'
 
 services:
   metamorphic:
-    container_name: metamorphic
+    image: openjdk:17
+    volumes: 
+      - ./build/metarmophic.pdf-1.0.jar:/home/dev/metarmophic.pdf-1.0.jar
+    command: "java -jar /home/dev/metarmophic.pdf-1.0.jar"
     ports:
       - 8080:8080
-    build: .
-    command: "java -jar /home/dev/metarmophic.pdf-1.0.jar"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1G
+

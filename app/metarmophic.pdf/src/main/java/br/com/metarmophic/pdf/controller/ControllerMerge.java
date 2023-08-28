@@ -1,5 +1,7 @@
 package br.com.metarmophic.pdf.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,15 +16,16 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.metarmophic.pdf.dto.PdfPropertiesDTO;
-import br.com.metarmophic.pdf.log.Logger;
 import br.com.metarmophic.pdf.service.MergeService;
 import lombok.Data;
 
 @Data
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/merge")
+@RequestMapping("/pdf/merge")
 public class ControllerMerge {
+	
+	private Logger log = LoggerFactory.getLogger(ControllerMerge.class);
 	
 	@Autowired
 	private MergeService mergeService = new MergeService();
@@ -34,7 +37,7 @@ public class ControllerMerge {
 		
 		try {
 			PdfPropertiesDTO properties = new ObjectMapper().readValue(json, PdfPropertiesDTO.class);
-			Logger.getLog().debug("Iniciando servico de merge.");
+			log.debug("Iniciando servico de merge.");
 			byte[] bytes = this.getMergeService().merge(files, properties);
 			
 			response = ResponseEntity.ok()
@@ -43,9 +46,9 @@ public class ControllerMerge {
 		                .body(bytes);
 			
 		} catch (Exception e) {
-			Logger.getLog().info("Falha ao realizar o merge.");
+			log.info("Falha ao realizar o merge.");
 			
-			if (Logger.getLog().isDebugEnabled()) {
+			if (log.isDebugEnabled()) {
 				e.printStackTrace();				
 			}
 			
