@@ -2,6 +2,8 @@
 <configuration>
 
   <springProperty name="name" source="spring.application.name" />
+  <springProperty name="url" source="user.loki.url" />
+  
 
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -14,7 +16,7 @@
   <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
     <!-- (1) -->
     <http>
-      <url>http://localhost:3100/loki/api/v1/push</url>
+      <url>${url}</url>
     </http>
     <format>
       <!-- (2) -->
