@@ -1,16 +1,19 @@
 # metamorphic-pdf
 
-![logo](logo.jpeg)
+![logo](artifacts/img/logo.jpeg)
 
-Microsservices Java para manipulação de PDF's 
+Serviço para manipulação de PDF's. Utilizado no meu projeto de TCC (Doc Easy).
 
-- [ ]  Estruturar microsserviços para PDF em uma estrutura docker.
-    - [ ]  Microsserviço para Merge
-    - [ ]  Microsserviço para Split
-    - [ ]  Microsserviço para compress
-    - [ ]  Microsserviço para extração de texto em .txt
+## Descrição 🧑🏼‍🏫
 
-- [x]  Usar raspberry para o desenvolvimento
-- [ ]  Interface em VueJs
+Microsserviço responsável por realizar a junção dos documentos PDF.
 
-![topologia](./img/topologia.excalidraw.png)
+## Tecnologias ⚙️
+
+- Java
+- Spring Boot
+- PdfBox
+
+## Topologia
+
+![topologia](artifacts/img/topologia.excalidraw.png)
